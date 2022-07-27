@@ -1,19 +1,20 @@
 import { useQuery } from "react-query";
 import Character from "./Character";
+import React, { useState } from "react";
 
 export default function Characters() {
-    const fetchCharacters = async () => {
-        const response = await fetch("https://rickandmortyapi.com/api/character")
+    const [page, setPage] = useState(1)
+    const fetchCharacters = async ({ queryKey }) => {
+        const response = await fetch(`https://rickandmortyapi.com/api/character?page=${queryKey[1]}`)
         return response.json()
     };
 
-    const { data, status } = useQuery("characters", fetchCharacters)
-    console.log(status)
+    const { data, status, isPreviousData, isLoading, isError } = useQuery(["characters", page], fetchCharacters, { keepPreviousData: true })
 
-    if (status === "loading") {
+    if (isLoading) {
         return <div>Loading...</div>
     }
-    if (status === "error") {
+    if (isError) {
         return <div>Error!</div>
     }
 
@@ -22,6 +23,12 @@ export default function Characters() {
             {data.results.map(character => (
                 <Character character={character} key={character.id} />
             ))}
+            <div>
+                <button disabled={page === 1} onClick={() => setPage((old) => old - 1)}>
+                    Previous
+                </button>
+                <button disabled={isPreviousData && !data.info.next} onClick={() => setPage((old) => old + 1)}>Next</button>
+            </div>
         </div>
     )
 }
